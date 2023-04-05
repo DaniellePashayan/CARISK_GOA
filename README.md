@@ -1,4 +1,4 @@
-# CARISK_GOA
+# CARISK GoAnywhere Process
 
 This automation does the following:
 

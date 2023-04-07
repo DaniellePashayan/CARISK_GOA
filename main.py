@@ -1,48 +1,31 @@
 import os
-from PyPDF2 import PdfMerger, PdfReader
+from PyPDF2 import PdfMerger
 from datetime import datetime, timedelta
 
 
 def run():
-    USE = 'DEV'
+    today = datetime.today()
+    delta = timedelta(days = -1)
 
-    if USE == 'PROD':
-        # gets yesterdays date
-        today = datetime.today()
-        ## manual testing date
-        # str_date = '3/24/2023'
-        # today = datetime.strptime(str_date, '%m/%d/%Y')
-        delta = timedelta(days = -1)
+    #
+    while True:
+        date = today + delta
+        print(date)
+        if date.weekday() < 5:
+            break
+        delta -= timedelta(days = 1)
 
-        while True:
-            date = today + delta
-            print(date)
-            if date.weekday() < 5:
-                break
-            delta -= timedelta(days = 1)
+    # Gets the last business day
+    if date.weekday() >= 5:
+        date = date - datetime.timedelta(days = datetime.today().weekday() % 4 + 2)
 
-        # Gets the last business day
-        if date.weekday() >= 5:
-            date = date - datetime.timedelta(days = datetime.today().weekday() % 4 + 2)
+    year = date.year
+    month = datetime.strftime(date, format = '%m')
+    # yesterdays date in MM_DD_YY format
+    date_frmt = datetime.strftime(date, format = '%m_%d_%y')
 
-        year = date.year
-        month = datetime.strftime(date, format = '%m')
-        # yesterdays date in MM_DD_YY format
-        date_frmt = datetime.strftime(date, format = '%m_%d_%y')
-
-        dated_path = f'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/{year}/{month} {year}/{date_frmt}/'
-        dest_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/GOA Test/'
-
-    elif USE == 'DEV':
-        date = '03/29/2023'
-        date = datetime.strptime(date, '%m/%d/%Y')
-        year = date.year
-        month = datetime.strftime(date, format = '%m')
-        # yesterdays date in MM_DD_YY format
-        date_frmt = datetime.strftime(date, format = '%m_%d_%y')
-
-        dated_path = f'./GOA/{year}/{month} {year}/{date_frmt}/'
-        dest_path = './GOA/'
+    dated_path = f'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/{year}/{month} {year}/{date_frmt}/'
+    dest_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/GOA Test/'
 
     invoices = {}
     for filename in os.listdir(dated_path):

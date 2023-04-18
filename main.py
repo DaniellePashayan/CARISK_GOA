@@ -25,7 +25,7 @@ def run():
     date_frmt = datetime.strftime(date, '%m_%d_%y')
 
     dated_path = f'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/{year}/{month} {year}/{date_frmt}/'
-    dest_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/GOA Test/'
+    dest_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/GOA/'
 
     if os.path.exists(dated_path):
         invoices = {}

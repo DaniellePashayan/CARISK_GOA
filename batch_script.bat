@@ -1,3 +1,10 @@
 @Echo Starting Carisk GOA
-python -u "C:\Users\dpashayan\Desktop\Automations\CARISK_GOA\main.py"
+
+setlocal
+set "FILE_PATH=%~dp0.."
+set "SCRIPT_PATH=%FILE_PATH%\main.py"
+python -u "%SCRIPT_PATH%"
+endlocal
+
+python -u "%SCRIPT_PATH%"
 @Echo Process Completed

@@ -2,6 +2,7 @@ import os
 from pypdf import PdfMerger
 from datetime import datetime, timedelta
 import tqdm
+import pandas as pd
 
 
 def run():
@@ -26,6 +27,8 @@ def run():
 
     dated_path = f'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/{year}/{month} {year}/{date_frmt}/'
     dest_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/GOA/'
+    
+    log_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/script logs/'
 
     if os.path.exists(dated_path):
         invoices = {}
@@ -36,15 +39,23 @@ def run():
                     invoices[invoice_number] = []
                 invoices[invoice_number].append(os.path.join(dated_path, filename))
 
-        for invoice_number, pdf_list in tqdm.tqdm(invoices.items()):
-            pdf_list = sorted(pdf_list)
+        for invoice_key in invoices.key():
+            entry = invoices[invoice_key]
+            invoice = entry['Invoice']
+            pdf_list=sorted(entry['Files'])
             merger = PdfMerger()
-            for pdf_file in pdf_list:
-                with open(pdf_file, 'rb') as file:
+            for pdf in pdf_list:
+                with open(pdf, 'rb') as file:
                     merger.append(file)
-            path = dest_path + invoice_number + '.pdf'
-            with open(path, 'wb') as output:
-                merger.write(output)
+            path = f'{dest_path}/{invoice}.pdf'
+            if not os.path.exists(path) and not entry['Saved']:
+                with open(path, 'wb') as output:
+                    merger.write(output)
+            entry['Saved'] = True
+    
+        df = pd.DataFrame.from_dict(invoices, orient='index')
+        df.to_excel(log_path, index=None)
+
     else:
         print("Folder missing")
 

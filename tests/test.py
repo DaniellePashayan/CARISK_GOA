@@ -1,6 +1,6 @@
 import datetime as dt
 import os
-from PyPDF2 import PdfMerger
+from pypdf import PdfMerger
 
 TEST_PDF_LOC = os.path.abspath('./test_data/OC WCNF Records/2023/05 2023/05_01_23/')
 TEST_GOA_LOC = os.path.abspath('./test_data/OC WCNF Records/GOA/')
@@ -90,7 +90,7 @@ class Test_File_Combine:
     def test_file_combine(self):
         if len(os.listdir(TEST_GOA_LOC)) > 0:
             for file in os.listdir(TEST_GOA_LOC):
-                os.remove(file) 
+                os.remove(os.path.join(TEST_GOA_LOC, file)) 
 
                 
         invoices = {}

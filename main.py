@@ -7,18 +7,19 @@ import pandas as pd
 
 def run():
     today = datetime.today()
-    delta = timedelta(days = -1)
+    delta = timedelta(days=-1)
 
     #
     while True:
         date = today + delta
         if date.weekday() < 5:
             break
-        delta -= timedelta(days = 1)
+        delta -= timedelta(days=1)
 
     # Gets the last business day
     if date.weekday() >= 5:
-        date = date - datetime.timedelta(days = datetime.today().weekday() % 4 + 2)
+        date = date - \
+            datetime.timedelta(days=datetime.today().weekday() % 4 + 2)
 
     year = date.year
     month = datetime.strftime(date, '%m')
@@ -27,7 +28,7 @@ def run():
 
     dated_path = f'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/{year}/{month} {year}/{date_frmt}/'
     dest_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/GOA/'
-    
+
     log_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/script logs/'
 
     if os.path.exists(dated_path):
@@ -36,13 +37,19 @@ def run():
             if filename.endswith('.pdf'):
                 invoice_number = filename.split('_')[0]
                 if invoice_number not in invoices:
-                    invoices[invoice_number] = []
-                invoices[invoice_number].append(os.path.join(dated_path, filename))
+                    invoices[invoice_number] = {
+                        'Invoice' : invoice_number,
+                        'Files': [],
+                        'File Count': 0,
+                        'Saved' : False
+                    }
+                invoices[invoice_number]['Files'].append(os.path.join(dated_path, filename))
+                invoices[invoice_number]['File Count'] += 1
 
-        for invoice_key in invoices.key():
+        for invoice_key in tqdm.tqdm(invoices.keys()):
             entry = invoices[invoice_key]
             invoice = entry['Invoice']
-            pdf_list=sorted(entry['Files'])
+            pdf_list = sorted(entry['Files'])
             merger = PdfMerger()
             for pdf in pdf_list:
                 with open(pdf, 'rb') as file:
@@ -52,7 +59,7 @@ def run():
                 with open(path, 'wb') as output:
                     merger.write(output)
             entry['Saved'] = True
-    
+
         df = pd.DataFrame.from_dict(invoices, orient='index')
         df.to_excel(log_path, index=None)
 

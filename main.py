@@ -3,6 +3,7 @@ from pypdf import PdfMerger
 from datetime import datetime, timedelta
 import tqdm
 import pandas as pd
+import time
 
 
 def run():
@@ -38,12 +39,13 @@ def run():
                 invoice_number = filename.split('_')[0]
                 if invoice_number not in invoices:
                     invoices[invoice_number] = {
-                        'Invoice' : invoice_number,
+                        'Invoice': invoice_number,
                         'Files': [],
                         'File Count': 0,
-                        'Saved' : False
+                        'Saved': False
                     }
-                invoices[invoice_number]['Files'].append(os.path.join(dated_path, filename))
+                invoices[invoice_number]['Files'].append(
+                    os.path.join(dated_path, filename))
                 invoices[invoice_number]['File Count'] += 1
 
         for invoice_key in tqdm.tqdm(invoices.keys()):
@@ -61,10 +63,14 @@ def run():
             entry['Saved'] = True
 
         df = pd.DataFrame.from_dict(invoices, orient='index')
-        df.to_excel(log_path, index=None)
+        df.to_excel(f'{log_path}/{date_frmt}.xlsx', index=None)
 
     else:
-        print("Folder missing")
+        print("Folder missing, retrying in 10 minutes")
+        wait_time = 600  # 10 minutes
+        for remaining in tqdm(range(wait_time, 0, -1), desc="Countdown", unit="s"):
+            time.sleep(1)
+        run()
 
 
 if __name__ == '__main__':

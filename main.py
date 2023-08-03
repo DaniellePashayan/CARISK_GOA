@@ -5,29 +5,37 @@ import tqdm
 import pandas as pd
 import time
 
-def get_file_count(folder_path:str) -> int:
-    files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
-    return len(files)
-    
 
-def monitor_folder(folder_path:str, date_frmt: str, interval=60) -> None:
-        prev_file_count = get_file_count(folder_path)
-        time.sleep(interval)
-        
+def get_file_count(folder_path: str) -> int:
+    if os.path.exists(folder_path):
+        files = [f for f in os.listdir(folder_path) if os.path.isfile(
+            os.path.join(folder_path, f))]
+        return len(files)
+    else:
+        return 0
+
+
+def monitor_folder(folder_path: str, date_frmt: str, interval=60) -> None:
+    prev_file_count = get_file_count(folder_path)
+    if prev_file_count > 0:
         keep_checking = True
-        
-        while keep_checking:
-            curr_file_count = get_file_count(folder_path)
-            
-            if curr_file_count > prev_file_count:
-                print("New files detected")
-                prev_file_count = curr_file_count
-            else:
-                print("No new files detected after 60 seconds")
-                run(folder_path, date_frmt)
-                keep_checking = False
+        time.sleep(interval)
+    else:
+        keep_checking = False
 
-def get_folder() -> str:
+    while keep_checking:
+        curr_file_count = get_file_count(folder_path)
+
+        if curr_file_count > prev_file_count:
+            print("New files detected")
+            prev_file_count = curr_file_count
+        else:
+            print("No new files detected after 60 seconds")
+            run(folder_path, date_frmt)
+            keep_checking = False
+
+
+def get_folder(folder_path) -> (str, str):
     today = datetime.today()
     delta = timedelta(days=-1)
 
@@ -48,15 +56,18 @@ def get_folder() -> str:
     # yesterday's date in MM_DD_YY format
     date_frmt = datetime.strftime(date, '%m_%d_%y')
 
-    dated_path = f'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/{year}/{month} {year}/{date_frmt}/'
+    dated_path = f'{folder_path}/{year}/{month} {year}/{date_frmt}/'
     return dated_path, date_frmt
 
-def run(dated_path: str, date_frmt:str) -> None:
+
+def run(dated_path: str, date_frmt: str) -> None:
     dest_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/GOA/'
     log_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/script logs/'
 
+    print(os.path.exists(dated_path))
+
     if os.path.exists(dated_path):
-       
+        print(dated_path)
         invoices = {}
         for filename in os.listdir(dated_path):
             if filename.endswith('.pdf'):
@@ -101,5 +112,7 @@ def run(dated_path: str, date_frmt:str) -> None:
 
 
 if __name__ == '__main__':
-    dated_path, date_frmt = get_folder()
-    monitor_folder(dated_path, date_frmt)
+    for folder in ['M:\CPP-Data\Sutherland RPA\MedicalRecords\OC WCNF Records', 'M:\CPP-Data\Sutherland RPA\MedicalRecords\OC WCNF Manual Records']:
+        print(f'Combining folder: {folder}')
+        dated_path, date_frmt = get_folder(folder)
+        monitor_folder(dated_path, date_frmt)

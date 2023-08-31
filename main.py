@@ -64,13 +64,18 @@ def run(dated_path: str, date_frmt: str) -> None:
     dest_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/GOA/'
     log_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/script logs/'
 
-    print(os.path.exists(dated_path))
-
     if os.path.exists(dated_path):
         print(dated_path)
         invoices = {}
         for filename in os.listdir(dated_path):
             if filename.endswith('.pdf'):
+
+                # if filename contains a dash, replace it with an underscore
+                if '-' in filename:
+                    # rename the file, replacing the dash with udnerscroe
+                    os.rename(os.path.join(dated_path, filename), os.path.join(
+                        dated_path, filename.replace('-', '_')))
+                filename = filename.replace('-', '_')
                 invoice_number = filename.split('_')[0]
                 if invoice_number not in invoices:
                     invoices[invoice_number] = {
@@ -105,14 +110,12 @@ def run(dated_path: str, date_frmt: str) -> None:
 
     else:
         print("Folder missing")
-        # wait_time = 600  # 10 minutes
-        # for remaining in tqdm(range(wait_time, 0, -1), desc="Countdown", unit="s"):
-        #     time.sleep(1)
-        # run()
 
 
 if __name__ == '__main__':
     for folder in ['M:\CPP-Data\Sutherland RPA\MedicalRecords\OC WCNF Records', 'M:\CPP-Data\Sutherland RPA\MedicalRecords\OC WCNF Manual Records']:
         print(f'Combining folder: {folder}')
         dated_path, date_frmt = get_folder(folder)
+        # dated_path = f'{folder}/2023/08 2023/08_07_23/'
+        # date_frmt = '08_07_23'
         monitor_folder(dated_path, date_frmt)

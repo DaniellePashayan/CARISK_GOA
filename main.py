@@ -119,3 +119,4 @@ if __name__ == '__main__':
         # dated_path = f'{folder}/2023/08 2023/08_07_23/'
         # date_frmt = '08_07_23'
         monitor_folder(dated_path, date_frmt)
+        # group_archive()

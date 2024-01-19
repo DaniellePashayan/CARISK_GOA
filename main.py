@@ -1,7 +1,7 @@
 import os
 from pypdf import PdfMerger
 from datetime import datetime, timedelta
-import tqdm
+from tqdm import tqdm
 import pandas as pd
 import time
 import shutil
@@ -31,7 +31,13 @@ def get_folder(folder_path) -> (str, str):
 
     dated_path = f'{folder_path}/{year}/{month} {year}/{date_frmt}/'
     date = datetime.strftime(date, '%m%d%Y')
+
+    # returns:
+    # M:\CPP-Data\Sutherland RPA\MedicalRecords\OC WCNF Records\2023\10 2023\10_27_23
+    # 10_27_23
+    # 10272023
     return dated_path, date_frmt, date
+
 
 def get_file_count(folder_path: str) -> int:
     if os.path.exists(folder_path):
@@ -40,6 +46,7 @@ def get_file_count(folder_path: str) -> int:
         return len(files)
     else:
         return 0
+
 
 def has_screenshots(folder_path: str) -> bool:
     if os.path.exists(folder_path):
@@ -52,11 +59,13 @@ def has_screenshots(folder_path: str) -> bool:
             else:
                 return False
 
+
 def monitor_folder(folder_path: str, date_frmt: str, interval=60) -> None:
     prev_file_count = get_file_count(folder_path)
     if prev_file_count > 0:
         keep_checking = True
-        time.sleep(interval)
+        for remaining in tqdm(range(interval), desc="Countdown", unit="sec"):
+            time.sleep(1)  # Pause for 1 second
     else:
         keep_checking = False
 
@@ -71,6 +80,7 @@ def monitor_folder(folder_path: str, date_frmt: str, interval=60) -> None:
             run(folder_path, date_frmt)
             keep_checking = False
 
+
 def move_error_screenshots(dated_path):
     error_path = f'{dated_path}/error screenshots'
 
@@ -81,12 +91,14 @@ def move_error_screenshots(dated_path):
             if filename.endswith('.png'):
                 shutil.move(f'{dated_path}/{filename}', error_path)
 
+
 def run(dated_path: str, date_frmt: str) -> None:
     dest_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/GOA/'
     log_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/script logs/'
 
+    date = pd.to_datetime(date_frmt, format="%m_%d_%y").strftime('%m%d%Y')
+
     if os.path.exists(dated_path):
-        print(dated_path)
         df = read_input_file(date)
         df = df['INVNUM'].astype(str).tolist()
         invoices = {}
@@ -99,7 +111,7 @@ def run(dated_path: str, date_frmt: str) -> None:
                     os.rename(os.path.join(dated_path, filename), os.path.join(
                         dated_path, filename.replace('-', '_')))
                     filename = filename.replace('-', '_')
-                    
+
                 invoice_number = filename.split('_')[0]
                 if invoice_number in df:
                     if invoice_number not in invoices:
@@ -113,8 +125,7 @@ def run(dated_path: str, date_frmt: str) -> None:
                             os.path.join(dated_path, filename))
                         invoices[invoice_number]['File Count'] += 1
 
-
-        for invoice_key in tqdm.tqdm(invoices.keys()):
+        for invoice_key in tqdm(invoices.keys()):
             entry = invoices[invoice_key]
             invoice = entry['Invoice']
             pdf_list = sorted(entry['Files'])
@@ -137,16 +148,23 @@ def run(dated_path: str, date_frmt: str) -> None:
     else:
         print("Folder missing")
 
+
 def read_input_file(date: str) -> pd.DataFrame:
     path = r'M:\CPP-Data\Sutherland RPA\Northwell Process Automation ETM Files\OC AllScripts'
     file = glob(f'{path}/*_{date}_OnC.xls')
     df = pd.read_excel(file[0])
     return df
 
+
 if __name__ == '__main__':
-    for folder in ['M:\CPP-Data\Sutherland RPA\MedicalRecords\OC WCNF Records', 'M:\CPP-Data\Sutherland RPA\MedicalRecords\OC WCNF Manual Records']:
-        print(f'Combining folder: {folder}')
-        dated_path, date_frmt, date = get_folder(folder)
-        if has_screenshots(dated_path):
-            move_error_screenshots(dated_path)
-        monitor_folder(dated_path, date_frmt)
+    if os.path.exists("M:/"):
+        for folder in ['M:\CPP-Data\Sutherland RPA\MedicalRecords\OC WCNF Records', 'M:\CPP-Data\Sutherland RPA\MedicalRecords\OC WCNF Manual Records']:
+            print(f'Combining folder: {folder}')
+            # to run normally, leave this line uncommented. to run manually, comment out this line
+            dated_path, date_frmt, date = get_folder(folder)
+            
+            if has_screenshots(dated_path):
+                move_error_screenshots(dated_path)
+            monitor_folder(dated_path, date_frmt)
+    else:
+        print("NOT CONNECTED TO M DRIVE")

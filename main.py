@@ -98,9 +98,10 @@ def run(dated_path: str, date_frmt: str) -> None:
 
     date = pd.to_datetime(date_frmt, format="%m_%d_%y").strftime('%m%d%Y')
 
+    print(dated_path)
     if os.path.exists(dated_path):
-        df = read_input_file(date)
-        df = df['INVNUM'].astype(str).tolist()
+        # df = read_input_file(date)
+        # df = df['INVNUM'].astype(str).tolist()
         invoices = {}
         for filename in os.listdir(dated_path):
             if filename.endswith('.pdf'):
@@ -113,17 +114,17 @@ def run(dated_path: str, date_frmt: str) -> None:
                     filename = filename.replace('-', '_')
 
                 invoice_number = filename.split('_')[0]
-                if invoice_number in df:
-                    if invoice_number not in invoices:
-                        invoices[invoice_number] = {
-                            'Invoice': invoice_number,
-                            'Files': [],
-                            'File Count': 0,
-                            'Saved': False
-                        }
-                        invoices[invoice_number]['Files'].append(
-                            os.path.join(dated_path, filename))
-                        invoices[invoice_number]['File Count'] += 1
+                # if invoice_number in df:
+                if invoice_number not in invoices:
+                    invoices[invoice_number] = {
+                        'Invoice': invoice_number,
+                        'Files': [],
+                        'File Count': 0,
+                        'Saved': False
+                    }
+                    invoices[invoice_number]['Files'].append(
+                        os.path.join(dated_path, filename))
+                    invoices[invoice_number]['File Count'] += 1
 
         for invoice_key in tqdm(invoices.keys()):
             entry = invoices[invoice_key]
@@ -165,6 +166,6 @@ if __name__ == '__main__':
             
             if has_screenshots(dated_path):
                 move_error_screenshots(dated_path)
-            monitor_folder(dated_path, date_frmt)
+            monitor_folder(dated_path, date_frmt, interval=1)
     else:
         print("NOT CONNECTED TO M DRIVE")

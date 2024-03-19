@@ -166,6 +166,6 @@ if __name__ == '__main__':
             
             if has_screenshots(dated_path):
                 move_error_screenshots(dated_path)
-            monitor_folder(dated_path, date_frmt, interval=1)
+            monitor_folder(dated_path, date_frmt)
     else:
         print("NOT CONNECTED TO M DRIVE")

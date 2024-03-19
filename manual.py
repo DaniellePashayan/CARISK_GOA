@@ -7,8 +7,8 @@ if __name__ == '__main__':
 
             # to run normally, leave this line commented. to run manually, uncomment these lines
             year = '2024'
-            month = '01'
-            day = '17'
+            month = '02'
+            day = '27'
             short_year = year[2:]
             
             dated_path = f'{folder}/{year}/{month} {year}/{month}_{day}_{short_year}'

@@ -96,6 +96,9 @@ def run(dated_path: str, date_frmt: str) -> None:
     dest_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/GOA/'
     log_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/script logs/'
 
+    date = pd.to_datetime(date_frmt, format="%m_%d_%y").strftime('%m%d%Y')
+
+    print(dated_path)
     if os.path.exists(dated_path):
         # df = read_input_file(date)
         # df = df['INVNUM'].astype(str).tolist()
@@ -156,6 +159,7 @@ def read_input_file(date: str) -> pd.DataFrame:
 
 if __name__ == '__main__':
     if os.path.exists("M:/"):
+
         for folder in ['M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records', 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Manual Records']:
             print(f'Combining folder: {folder}')
             # to run normally, leave this line uncommented. to run manually, comment out this line

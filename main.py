@@ -1,5 +1,5 @@
 import os
-from pypdf import PdfMerger
+from PyPDF2 import PdfMerger
 from datetime import datetime, timedelta
 from tqdm import tqdm
 import pandas as pd

@@ -8,7 +8,7 @@ import shutil
 from glob import glob
 
 
-def get_folder(folder_path) -> (str, str):
+def get_folder(folder_path) -> tuple[str,str]:
     today = datetime.today()
     delta = timedelta(days=-1)
 

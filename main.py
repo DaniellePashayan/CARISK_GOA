@@ -98,11 +98,11 @@ def move_error_screenshots(dated_path):
 
 def run(dated_path: str, date_frmt: str) -> None:
     os.makedirs('./logs', exist_ok=True)
-    logger.add(f'./logs/log_{time}.log', rotation='1 day', retention='7 days', level='INFO')
     dest_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/GOA/'
     log_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/script logs/'
 
     # date = pd.to_datetime(date_frmt, format="%m_%d_%y").strftime('%m%d%Y')
+    logger.add(f'./logs/log_{date_frmt}.log', rotation='1 day', retention='7 days', level='INFO')
     logger.info(f'Processing {date_frmt} folder')
 
     logger.debug(dated_path)
@@ -154,8 +154,7 @@ def run(dated_path: str, date_frmt: str) -> None:
         df.to_excel(f'{log_path}/{date_frmt}.xlsx', index=None)
 
     else:
-        print("Folder missing")
-        logger.warning(f'{dated_path} is missing')
+        logger.info(f'Manually saved records for {dated_path} is missing')
 
 
 def read_input_file(date: str) -> pd.DataFrame:

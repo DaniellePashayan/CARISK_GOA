@@ -84,10 +84,10 @@ def monitor_folder(folder_path: str, date_frmt: str, interval=60) -> None:
 
 
 def move_error_screenshots(dated_path):
-    logger.info(f'Moving error screenshots to error folder')
     error_path = f'{dated_path}/error screenshots'
 
     if os.path.exists(dated_path):
+        logger.info(f'Moving error screenshots to error folder')
         if not os.path.exists(error_path):
             os.mkdir(error_path)
         for filename in os.listdir(dated_path):
@@ -98,8 +98,8 @@ def move_error_screenshots(dated_path):
 
 def run(dated_path: str, date_frmt: str) -> None:
     os.makedirs('./logs', exist_ok=True)
-    dest_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/GOA/'
-    log_path = 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records/script logs/'
+    dest_path = '\\\\NT2KWB972SRV03\\SHAREDATA\\CPP-Data\\Sutherland RPA\\MedicalRecords\\OC WCNF Records\\GOA\\'
+    log_path = '\\\\NT2KWB972SRV03\\SHAREDATA\\CPP-Data\\Sutherland RPA\\MedicalRecords\\OC WCNF Records\\script logs\\'
 
     # date = pd.to_datetime(date_frmt, format="%m_%d_%y").strftime('%m%d%Y')
     logger.add(f'./logs/log_{date_frmt}.log', rotation='1 day', retention='7 days', level='INFO')
@@ -158,16 +158,18 @@ def run(dated_path: str, date_frmt: str) -> None:
 
 
 def read_input_file(date: str) -> pd.DataFrame:
-    path = r'M:\CPP-Data\Sutherland RPA\Northwell Process Automation ETM Files\OC AllScripts'
-    file = glob(f'{path}/*_{date}_OnC.xls')
+    path = '\\\\NT2KWB972SRV03\\SHAREDATA\\CPP-Data\\Sutherland RPA\\Northwell Process Automation ETM Files\\OC AllScripts'
+    file = glob(f'{path}\\*_{date}_OnC.xls')
     df = pd.read_excel(file[0])
     return df
 
 
 if __name__ == '__main__':
-    if os.path.exists("M:/"):
+    if os.path.exists("\\\\NT2KWB972SRV03\\SHAREDATA"):
 
-        for folder in ['M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Records', 'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Manual Records']:
+        for folder in ['\\\\NT2KWB972SRV03\\SHAREDATA\\CPP-Data\\Sutherland RPA\\MedicalRecords\\OC WCNF Records', 
+                    #    'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Manual Records'
+                       ]:
             print(f'Combining folder: {folder}')
             # to run normally, leave this line uncommented. to run manually, comment out this line
             dated_path, date_frmt, date = get_folder(folder)

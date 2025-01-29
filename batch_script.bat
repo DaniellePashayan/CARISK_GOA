@@ -8,7 +8,7 @@ set VENV_PATH=%FILE_PATH\%.venv
 call "%VENV_PATH%\Scripts\activate.bat"
 set SCRIPT_PATH=%FILE_PATH\%main.py
 
-python -u "%SCRIPT_PATH%"
+python -u "%SCRIPT_PATH%" > logs\TS_log.txt 2>&1
 ENDLOCAL
 
 Echo Process Completed

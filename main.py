@@ -8,6 +8,7 @@ import shutil
 from glob import glob
 from loguru import logger
 from pathlib import Path
+import pymupdf
 
 # get yesterdays date
 def get_last_business_day(date: datetime | str | None = None) -> datetime:
@@ -62,20 +63,22 @@ class RootFolder():
     
     def get_records_per_invoice(self) -> dict:
         invoice_records = {}
-        for invoice in folder.invoices:
+        for invoice in self.invoices:
             invoice_records[invoice] = {
-                'Files': [folder.daily_folder / file for file in folder.file_names if invoice in file],
+                'Files': [self.daily_folder / file for file in self.file_names if invoice in file],
                 'File Count': len([file for file in self.file_names if invoice in file]),
+                'Original Page Count': sum([pymupdf.open(os.path.join(self.daily_folder, file)).page_count for file in self.file_names if invoice in file]),
+                'New Page Count': 0,
                 'Saved': False
             }
         return invoice_records
     
     def combine_pdfs(self):
         for invoice, data in tqdm(self.records_per_invoice.items()):
+            files = sorted(data['Files'])
             if len(data['Files']) > 1:
                 try:
                     merger = PdfMerger()
-                    files = sorted(data['Files'])
                     for file in files:
                         merger.append(file)
                     if not os.path.exists(self.destination / f"{invoice}.pdf"):
@@ -87,12 +90,16 @@ class RootFolder():
             else:
                 shutil.copy(files[0], self.destination / f"{invoice}.pdf")
                 data['Saved'] = True
+            data['New Page Count'] = pymupdf.open(self.destination / f"{invoice}.pdf").page_count
+            if data['Original Page Count'] != data['New Page Count']:
+                logger.critical(f"PDF IS MISSING PAGES{invoice}")
         logger.success(f"PDFs combined and saved to {self.destination}")
     
     def update_audit_log(self):
         audit_file = self.audit_path / f'{self.folder_date.strftime("%m_%d_%y")}.xlsx'
         
         df = pd.DataFrame.from_dict(self.records_per_invoice, orient='index').reset_index().rename(columns={'index': 'Invoice'})
+        df['Page Count Match'] = df['Original Page Count'] == df['New Page Count']
         
         df.to_excel(audit_file, index=False)
         logger.success(f"Audit log updated: {audit_file}")
@@ -105,4 +112,3 @@ if __name__ == '__main__':
     folder.combine_pdfs()
     df = folder.update_audit_log()
     logger.info(f"Script completed successfully for {last_business_date.strftime('%m_%d_%y')}")
-    logger.info(f"Files saved: {df[df['Saved'] == True]['Invoice'].tolist()}")

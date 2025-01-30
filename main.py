@@ -7,175 +7,102 @@ import time
 import shutil
 from glob import glob
 from loguru import logger
+from pathlib import Path
 
-
-def get_folder(folder_path) -> tuple[str,str]:
-    today = datetime.today()
+# get yesterdays date
+def get_last_business_day(date: datetime | str | None = None) -> datetime:
+    if isinstance(date, str):
+        try:
+            date = datetime.strptime(date, "%Y-%m-%d")
+        except ValueError:
+            logger.error(f"Invalid date format, date must be in the format YYYY-MM-DD")
+            raise ValueError
+    elif date is None:
+        date = datetime.today()
     delta = timedelta(days=-1)
-    logger.info(f'Getting folder for {folder_path}')
 
     while True:
-        date = today + delta
-        if date.weekday() < 5:
+        date_new = date + delta
+        # check if date is a weekday
+        if date_new.weekday() < 5:
             break
         delta -= timedelta(days=1)
+    return date_new 
 
-    # Gets the last business day
-    if date.weekday() >= 5:
-        date = date - \
-            datetime.timedelta(days=datetime.today().weekday() % 4 + 2)
+class RootFolder():
+    def __init__(self, folder_date: datetime):
+        self.folder_date = folder_date
+        self.setup_logger()
+        self.audit_path = Path(r'\\NT2KWB972SRV03\SHAREDATA\CPP-Data\Sutherland RPA\MedicalRecords\OC WCNF Records\script logs')
+        self.source_directory = Path(r'\\NT2KWB972SRV03\SHAREDATA\CPP-Data\Sutherland RPA\MedicalRecords\OC WCNF Records')
+        self.destination = Path(r'\\NT2KWB972SRV03\SHAREDATA\CPP-Data\Sutherland RPA\MedicalRecords\OC WCNF Records\GOA')
+        self.yearly_folder = self.source_directory / folder_date.strftime('%Y')
+        self.monthly_folder = self.yearly_folder / folder_date.strftime('%m %Y')
+        self.daily_folder = self.monthly_folder / folder_date.strftime('%m_%d_%y')
 
-    year = date.year
-    month = datetime.strftime(date, '%m')
-    # yesterday's date in MM_DD_YY format
-    date_frmt = datetime.strftime(date, '%m_%d_%y')
+        self.file_names = self.get_file_names()
+        self.invoices = self.get_invoice_list()
+        self.records_per_invoice = self.get_records_per_invoice()
+    
+    def setup_logger(self):
+        logger.add(f'./logs/log_{last_business_date.strftime("%m_%d_%y")}.log', rotation='1 day', retention='7 days', level='INFO')
+    
+    def get_file_names(self) -> list:
+        files = os.listdir(self.daily_folder)
+        logger.success(f"Found {len(files)} files in {self.daily_folder}")
+        return files
 
-    dated_path = f'{folder_path}/{year}/{month} {year}/{date_frmt}/'
-    date = datetime.strftime(date, '%m%d%Y')
-    logger.info(f'Folder: {dated_path}')
-
-    # returns:
-    # M:\CPP-Data\Sutherland RPA\MedicalRecords\OC WCNF Records\2023\10 2023\10_27_23
-    # 10_27_23
-    # 10272023
-    return dated_path, date_frmt, date
-
-
-def get_file_count(folder_path: str) -> int:
-    if os.path.exists(folder_path):
-        files = [f for f in os.listdir(folder_path) if os.path.isfile(
-            os.path.join(folder_path, f))]
-        return len(files)
-    else:
-        return 0
-
-
-def has_screenshots(folder_path: str) -> bool:
-    if os.path.exists(folder_path):
-        file_list = os.listdir(folder_path)
-        # check if any files end in png
-        for file in file_list:
-            if file.endswith('.png'):
-                return True
-            else:
-                return False
-
-
-def monitor_folder(folder_path: str, date_frmt: str, interval=60) -> None:
-    logger.info(f'Monitoring {folder_path} for new files')
-    prev_file_count = get_file_count(folder_path)
-    if prev_file_count > 0:
-        keep_checking = True
-        for remaining in tqdm(range(interval), desc="Countdown", unit="sec"):
-            time.sleep(1)  # Pause for 1 second
-    else:
-        keep_checking = False
-
-    while keep_checking:
-        curr_file_count = get_file_count(folder_path)
-
-        if curr_file_count > prev_file_count:
-            logger.warning("New files detected")
-            prev_file_count = curr_file_count
-        else:
-            logger.success("No new files detected after 60 seconds")
-            run(folder_path, date_frmt)
-            keep_checking = False
-
-
-def move_error_screenshots(dated_path):
-    error_path = f'{dated_path}/error screenshots'
-
-    if os.path.exists(dated_path):
-        logger.info(f'Moving error screenshots to error folder')
-        if not os.path.exists(error_path):
-            os.mkdir(error_path)
-        for filename in os.listdir(dated_path):
-            if filename.endswith('.png'):
-                shutil.move(f'{dated_path}/{filename}', error_path)
-    logger.success(f'Error screenshots moved to {error_path}')
-
-
-def run(dated_path: str, date_frmt: str) -> None:
-    os.makedirs('./logs', exist_ok=True)
-    dest_path = '\\\\NT2KWB972SRV03\\SHAREDATA\\CPP-Data\\Sutherland RPA\\MedicalRecords\\OC WCNF Records\\GOA\\'
-    log_path = '\\\\NT2KWB972SRV03\\SHAREDATA\\CPP-Data\\Sutherland RPA\\MedicalRecords\\OC WCNF Records\\script logs\\'
-
-    # date = pd.to_datetime(date_frmt, format="%m_%d_%y").strftime('%m%d%Y')
-    logger.add(f'./logs/log_{date_frmt}.log', rotation='1 day', retention='7 days', level='INFO')
-    logger.info(f'Processing {date_frmt} folder')
-
-    logger.debug(dated_path)
-    if os.path.exists(dated_path):
-        # df = read_input_file(date)
-        # df = df['INVNUM'].astype(str).tolist()
-        invoices = {}
-        for filename in os.listdir(dated_path):
-            if filename.endswith('.pdf'):
-
-                # if filename contains a dash, replace it with an underscore
-                if '-' in filename:
-                    # rename the file, replacing the dash with udnerscroe
-                    os.rename(os.path.join(dated_path, filename), os.path.join(
-                        dated_path, filename.replace('-', '_')))
-                    filename = filename.replace('-', '_')
-
-                invoice_number = filename.split('_')[0]
-                # if invoice_number in df:
-                if invoice_number not in invoices:
-                    invoices[invoice_number] = {
-                        'Invoice': invoice_number,
-                        'Files': [],
-                        'File Count': 0,
-                        'Saved': False
-                    }
-                    invoices[invoice_number]['Files'].append(
-                        os.path.join(dated_path, filename))
-                    invoices[invoice_number]['File Count'] += 1
-
-        for invoice_key in tqdm(invoices.keys()):
-            entry = invoices[invoice_key]
-            invoice = entry['Invoice']
-            pdf_list = sorted(entry['Files'])
-            merger = PdfMerger()
-            try:
-                for pdf in pdf_list:
-                    with open(pdf, 'rb') as file:
+    def get_invoice_list(self) -> set:
+        invoice_list = set([file.split('_')[0] for file in self.file_names])
+        # replace ".pdf.pdf" with ".pdf"
+        invoice_list = {invoice.replace('.pdf.pdf', '.pdf') for invoice in invoice_list}
+        logger.success(f"Found {len(invoice_list)} unique invoices in {self.daily_folder}")
+        return invoice_list
+        
+    
+    def get_records_per_invoice(self) -> dict:
+        invoice_records = {}
+        for invoice in folder.invoices:
+            invoice_records[invoice] = {
+                'Files': [folder.daily_folder / file for file in folder.file_names if invoice in file],
+                'File Count': len([file for file in self.file_names if invoice in file]),
+                'Saved': False
+            }
+        return invoice_records
+    
+    def combine_pdfs(self):
+        for invoice, data in tqdm(self.records_per_invoice.items()):
+            if len(data['Files']) > 1:
+                try:
+                    merger = PdfMerger()
+                    files = sorted(data['Files'])
+                    for file in files:
                         merger.append(file)
-                path = f'{dest_path}/{invoice}.pdf'
-                if not os.path.exists(path) and not entry['Saved']:
-                    with open(path, 'wb') as output:
-                        merger.write(output)
-                entry['Saved'] = True
-            except Exception as e:
-                print(f'{invoice}/{pdf} has error: {e}')
-
-        df = pd.DataFrame.from_dict(invoices, orient='index')
-        df.to_excel(f'{log_path}/{date_frmt}.xlsx', index=None)
-
-    else:
-        logger.info(f'Manually saved records for {dated_path} is missing')
-
-
-def read_input_file(date: str) -> pd.DataFrame:
-    path = '\\\\NT2KWB972SRV03\\SHAREDATA\\CPP-Data\\Sutherland RPA\\Northwell Process Automation ETM Files\\OC AllScripts'
-    file = glob(f'{path}\\*_{date}_OnC.xls')
-    df = pd.read_excel(file[0])
-    return df
-
+                    if not os.path.exists(self.destination / f"{invoice}.pdf"):
+                        merger.write(self.destination / f"{invoice}.pdf")
+                        merger.close()
+                        data['Saved'] = True
+                except Exception as e:
+                    logger.error(f"Error combining PDFs for invoice {invoice}: {e}")
+            else:
+                shutil.copy(files[0], self.destination / f"{invoice}.pdf")
+                data['Saved'] = True
+        logger.success(f"PDFs combined and saved to {self.destination}")
+    
+    def update_audit_log(self):
+        audit_file = self.audit_path / f'{self.folder_date.strftime("%m_%d_%y")}.xlsx'
+        
+        df = pd.DataFrame.from_dict(self.records_per_invoice, orient='index').reset_index().rename(columns={'index': 'Invoice'})
+        
+        df.to_excel(audit_file, index=False)
+        logger.success(f"Audit log updated: {audit_file}")
+        return df
 
 if __name__ == '__main__':
-    if os.path.exists("\\\\NT2KWB972SRV03\\SHAREDATA"):
-
-        for folder in ['\\\\NT2KWB972SRV03\\SHAREDATA\\CPP-Data\\Sutherland RPA\\MedicalRecords\\OC WCNF Records', 
-                    #    'M:/CPP-Data/Sutherland RPA/MedicalRecords/OC WCNF Manual Records'
-                       ]:
-            print(f'Combining folder: {folder}')
-            # to run normally, leave this line uncommented. to run manually, comment out this line
-            dated_path, date_frmt, date = get_folder(folder)
-            
-            if has_screenshots(dated_path):
-                move_error_screenshots(dated_path)
-            run(dated_path, date_frmt)
-    else:
-        print("NOT CONNECTED TO M DRIVE")
+    last_business_date = get_last_business_day()
+    
+    folder = RootFolder(last_business_date)
+    folder.combine_pdfs()
+    df = folder.update_audit_log()
+    logger.info(f"Script completed successfully for {last_business_date.strftime('%m_%d_%y')}")
+    logger.info(f"Files saved: {df[df['Saved'] == True]['Invoice'].tolist()}")

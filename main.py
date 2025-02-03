@@ -1,5 +1,4 @@
 import os
-from PyPDF2 import PdfMerger
 from datetime import datetime, timedelta
 from tqdm import tqdm
 import pandas as pd
@@ -9,6 +8,7 @@ from glob import glob
 from loguru import logger
 from pathlib import Path
 import pymupdf
+from process_status.status_handler import JSONStatus
 
 # get yesterdays date
 def get_last_business_day(date: datetime | str | None = None) -> datetime:
@@ -101,11 +101,20 @@ class RootFolder():
         df = pd.DataFrame.from_dict(self.records_per_invoice, orient='index').reset_index().rename(columns={'index': 'Invoice'})
         df['Page Count Match'] = df['Original Page Count'] == df['New Page Count']
         
+        # check if any rows have Page Count Match as False
+        if not df['Page Count Match'].all():
+            status.update_status("Failed", errors="Page Count Mismatch")
+        else:
+            status.update_status("Completed")
+        
         df.to_excel(audit_file, index=False)
         logger.success(f"Audit log updated: {audit_file}")
         return df
 
 if __name__ == '__main__':
+    status = JSONStatus(r'C:\Users\pa_dpashayan\OneDrive - Northwell Health\PHI Documents Only\Management\Scheduled Scripts - Status.json', "Carisk GOA")
+    status.update_status("Running")
+
     last_business_date = get_last_business_day()
     
     folder = RootFolder(last_business_date)

@@ -8,7 +8,7 @@ from glob import glob
 from loguru import logger
 from pathlib import Path
 import pymupdf
-from process_status.status_handler import JSONStatus
+from orcca.status_handler import JSONStatus
 
 # get yesterdays date
 def get_last_business_day(date: datetime | str | None = None) -> datetime:
@@ -112,7 +112,7 @@ class RootFolder():
         return df
 
 if __name__ == '__main__':
-    status = JSONStatus(r'C:\Users\pa_dpashayan\OneDrive - Northwell Health\PHI Documents Only\Management\Scheduled Scripts - Status.json', "Carisk GOA")
+    status = JSONStatus(r"\\NT2KWB972SRV03\SHAREDATA\CPP-Data\CBO Westbury Managers\LEADERSHIP\Bot Folder\Automated Scripts Status.json","Carisk GOA")
     status.update_status("Running")
 
     last_business_date = get_last_business_day()

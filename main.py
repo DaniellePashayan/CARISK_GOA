@@ -115,9 +115,14 @@ if __name__ == '__main__':
     status = JSONStatus(r"\\NT2KWB972SRV03\SHAREDATA\CPP-Data\CBO Westbury Managers\LEADERSHIP\Bot Folder\Automated Scripts Status.json","Carisk GOA")
     status.update_status("Running")
 
-    last_business_date = get_last_business_day()
-    
-    folder = RootFolder(last_business_date)
-    folder.combine_pdfs()
-    df = folder.update_audit_log()
-    logger.info(f"Script completed successfully for {last_business_date.strftime('%m_%d_%y')}")
+    try:
+        last_business_date = get_last_business_day()
+        
+        folder = RootFolder(last_business_date)
+        folder.combine_pdfs()
+        df = folder.update_audit_log()
+        logger.info(f"Script completed successfully for {last_business_date.strftime('%m_%d_%y')}")
+        status.update_status("Completed")
+    except Exception as e:
+        logger.error(f"Script failed: {e}")
+        status.update_status("Failed", errors=str(e))

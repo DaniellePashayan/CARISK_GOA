@@ -77,13 +77,14 @@ class RootFolder():
         for invoice, data in tqdm(self.records_per_invoice.items()):
             files = sorted(data['Files'])
             if len(data['Files']) > 1:
+                combined_pdf = pymupdf.open()
                 try:
-                    merger = PdfMerger()
                     for file in files:
-                        merger.append(file)
+                        pdf = pymupdf.open(file)
+                        combined_pdf.insert_pdf(pdf)
                     if not os.path.exists(self.destination / f"{invoice}.pdf"):
-                        merger.write(self.destination / f"{invoice}.pdf")
-                        merger.close()
+                        combined_pdf.save(self.destination / f"{invoice}.pdf")
+                        combined_pdf.close()
                         data['Saved'] = True
                 except Exception as e:
                     logger.error(f"Error combining PDFs for invoice {invoice}: {e}")

@@ -9,6 +9,12 @@ from loguru import logger
 from pathlib import Path
 import pymupdf
 from orcca.status_handler import JSONStatus
+from pushbullet import Pushbullet
+
+def send_error_notification(message):
+    PB_API_KEY = os.getenv('PUSHBULLET_API_KEY')
+    pb = Pushbullet(PB_API_KEY)
+    push = pb.push_note("UHC API Input Generator Error", f"{message}")
 
 # get yesterdays date
 def get_last_business_day(date: datetime | str | None = None) -> datetime:
@@ -127,3 +133,4 @@ if __name__ == '__main__':
     except Exception as e:
         logger.error(f"Script failed: {e}")
         status.update_status("Failed", errors=str(e))
+        send_error_notification(str(e))

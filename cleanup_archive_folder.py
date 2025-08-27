@@ -14,7 +14,10 @@ def cleanup_archive_folder(dir_path="M:/CPP-Data/Sutherland RPA/MedicalRecords/O
         folder_format = f'{modified_date.year}/{str(modified_date.month).zfill(2)} {modified_date.year}/{modified_date.month}_{modified_date.day}_{str(modified_date.year)[2:]}'
         # make a folder for the year, month, and day
         os.makedirs(f'{dir_path}/{folder_format}', exist_ok=True)
-        os.rename(f'{dir_path}/{file}', f'{dir_path}/{folder_format}/{file}')
+        try:
+            os.rename(f'{dir_path}/{file}', f'{dir_path}/{folder_format}/{file}')
+        except Exception as e:
+            os.remove(f'{dir_path}/{file}')
 
 if __name__ == "__main__":
     cleanup_archive_folder()

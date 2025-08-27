@@ -82,10 +82,17 @@ class RootFolder():
     def combine_pdfs(self):
         for invoice, data in tqdm(self.records_per_invoice.items()):
             files = sorted(data['Files'])
+            
             if len(data['Files']) > 1:
                 combined_pdf = pymupdf.open()
                 try:
                     for file in files:
+                        # check if the file size is equal to zero
+                        file_size = os.path.getsize(file)
+                        if file_size == 0:
+                            logger.warning(f"File {file} is empty, skipping.")
+                            send_error_notification(f"Corrupted file detected.")
+                            continue
                         pdf = pymupdf.open(file)
                         combined_pdf.insert_pdf(pdf)
                     if not os.path.exists(self.destination / f"{invoice}.pdf"):
@@ -100,6 +107,7 @@ class RootFolder():
             data['New Page Count'] = pymupdf.open(self.destination / f"{invoice}.pdf").page_count
             if data['Original Page Count'] != data['New Page Count']:
                 logger.critical(f"PDF IS MISSING PAGES{invoice}")
+                send_error_notification(f"PDF is missing pages for invoice {invoice}. Original: {data['Original Page Count']}, New: {data['New Page Count']}")
         logger.success(f"PDFs combined and saved to {self.destination}")
     
     def update_audit_log(self):

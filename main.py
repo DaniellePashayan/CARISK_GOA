@@ -8,13 +8,13 @@ from glob import glob
 from loguru import logger
 from pathlib import Path
 import pymupdf
-from orcca.status_handler import JSONStatus
+from orcca.status_handler import JSONStatus # type: ignore
 from pushbullet import Pushbullet
 
 def send_error_notification(message):
     PB_API_KEY = os.getenv('PUSHBULLET_API_KEY')
     pb = Pushbullet(PB_API_KEY)
-    push = pb.push_note("UHC API Input Generator Error", f"{message}")
+    push = pb.push_note("Carisk GOA", f"{message}")
 
 # get yesterdays date
 def get_last_business_day(date: datetime | str | None = None) -> datetime:

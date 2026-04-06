@@ -36,6 +36,14 @@ def get_last_business_day(date: datetime | str | None = None) -> datetime:
         delta -= timedelta(days=1)
     return date_new 
 
+def cleanup_log_folder():
+    log_folder = Path('./logs')
+    # delete all logs that are older than 30 days
+    if log_folder.exists():
+        for log_file in log_folder.glob('log_*.log'):
+            if log_file.is_file() and (datetime.now() - datetime.fromtimestamp(log_file.stat().st_mtime)).days > 30:
+                log_file.unlink()
+
 class RootFolder():
     def __init__(self, folder_date: datetime):
         self.folder_date = folder_date
@@ -131,6 +139,7 @@ if __name__ == '__main__':
     status.update_status("Running")
 
     try:
+        cleanup_log_folder()
         last_business_date = get_last_business_day()
         
         folder = RootFolder(last_business_date)

@@ -8,13 +8,6 @@ from glob import glob
 from loguru import logger
 from pathlib import Path
 import pymupdf
-from orcca.status_handler import JSONStatus # type: ignore
-from pushbullet import Pushbullet
-
-def send_error_notification(message):
-    PB_API_KEY = os.getenv('PUSHBULLET_API_KEY')
-    pb = Pushbullet(PB_API_KEY)
-    push = pb.push_note("Carisk GOA", f"{message}")
 
 # get yesterdays date
 def get_last_business_day(date: datetime | str | None = None) -> datetime:
@@ -99,7 +92,6 @@ class RootFolder():
                         file_size = os.path.getsize(file)
                         if file_size == 0:
                             logger.warning(f"File {file} is empty, skipping.")
-                            send_error_notification(f"Corrupted file detected.")
                             continue
                         pdf = pymupdf.open(file)
                         combined_pdf.insert_pdf(pdf)
@@ -115,7 +107,6 @@ class RootFolder():
             data['New Page Count'] = pymupdf.open(self.destination / f"{invoice}.pdf").page_count
             if data['Original Page Count'] != data['New Page Count']:
                 logger.critical(f"PDF IS MISSING PAGES{invoice}")
-                send_error_notification(f"PDF is missing pages for invoice {invoice}. Original: {data['Original Page Count']}, New: {data['New Page Count']}")
         logger.success(f"PDFs combined and saved to {self.destination}")
     
     def update_audit_log(self):
@@ -124,20 +115,11 @@ class RootFolder():
         df = pd.DataFrame.from_dict(self.records_per_invoice, orient='index').reset_index().rename(columns={'index': 'Invoice'})
         df['Page Count Match'] = df['Original Page Count'] == df['New Page Count']
         
-        # check if any rows have Page Count Match as False
-        if not df['Page Count Match'].all():
-            status.update_status("Failed", errors="Page Count Mismatch")
-        else:
-            status.update_status("Completed")
-        
         df.to_excel(audit_file, index=False)
         logger.success(f"Audit log updated: {audit_file}")
         return df
 
 if __name__ == '__main__':
-    status = JSONStatus(r"\\NT2KWB972SRV03\SHAREDATA\CPP-Data\CBO Westbury Managers\LEADERSHIP\Bot Folder\Automated Scripts Status.json","Carisk GOA")
-    status.update_status("Running")
-
     try:
         cleanup_log_folder()
         last_business_date = get_last_business_day()
@@ -146,8 +128,5 @@ if __name__ == '__main__':
         folder.combine_pdfs()
         df = folder.update_audit_log()
         logger.info(f"Script completed successfully for {last_business_date.strftime('%m_%d_%y')}")
-        status.update_status("Completed")
     except Exception as e:
         logger.error(f"Script failed: {e}")
-        status.update_status("Failed", errors=str(e))
-        send_error_notification(str(e))

@@ -4,8 +4,6 @@ loguru==0.7.3
 numpy==2.2.2
 openpyxl==3.1.5
 pandas==2.2.3
-# Editable Git install with no remote (process_status==0.3.1)
--e c:\users\pa_dpashayan\desktop\pyprojects\process_status
 PyMuPDF==1.25.3
 python-dateutil==2.9.0.post0
 pytz==2025.1
